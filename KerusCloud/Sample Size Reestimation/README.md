@@ -10,7 +10,7 @@ This is the current behavior for creating a **sample size reestimation** study d
 
 <h2 align="center"> Expected Behavior </h2>
 
-This is the expected behavior whilst creating a **sample size reestimation** whilst suppling an **Nmax**
+This is the expected behavior whilst creating a **sample size reestimation** whilst supplying an **Nmax**
 
 <p align="center">
   <img src="https://github.com/GABurns/RequirementsViz/blob/main/KerusCloud/Sample%20Size%20Reestimation/maxmultiplier.png" width="60%">
