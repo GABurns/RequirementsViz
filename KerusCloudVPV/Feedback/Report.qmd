@@ -1,0 +1,130 @@
+---
+title: "KerusCloud VPV"
+author: "Gareth Burns"
+format: html
+editor: visual
+execute: 
+  echo: false
+  warning: false
+---
+
+```{r}
+library(tidyverse, warn.conflicts = FALSE)
+
+
+# Local Data --------------------------------------------------------------
+
+LikertData <-
+  readxl::read_excel(path = "KerusCloud Virtual Population Visualisations.xlsx", sheet = "Sheet1")
+
+
+# Data Wrangling ----------------------------------------------------------
+scale <-  c(
+  "Not Important" = 1,
+  "Slightly Important" = 2,
+  "Moderately Important" = 3,
+  "Very Important" = 4,
+  "Extremely Important" = 5
+)
+
+colnames(LikertData)[6:15] <-
+  gsub('.*\\.', '', colnames(LikertData[6:15]))
+
+# LikertData[,6:15] <- lapply(LikertData[,6:15], factor, levels = scale)
+# dataSummary <- likert(LikertData[,6:15])
+response <- nrow(LikertData)
+
+data <-  LikertData |>
+  gather("Feature",
+         "Response",
+         -Id,
+         -`Start time`,
+         -`Completion time`,
+         -`Email`,
+         -Name) |>
+  mutate(Response = factor(
+    Response,
+    levels = c(
+      "Not Important",
+      "Slightly Important",
+      "Moderately Important",
+      "Very Important",
+      "Extremely Important"
+    )
+  )) |> 
+  group_by(Feature, Response) |>
+  summarise(count = n(), 
+            Percent = n()/response *100)
+
+
+```
+
+
+## KerusCloud VPV
+
+Users were provide 10 features and asked the question **"How important is the feature?"** and allowed the following responses on the **Likert Scale (1-5)**
+
+-    Not Important
+
+-    Slightly Important
+
+-    Moderately Important
+
+-    Very Important
+
+-    Extremely Important
+
+A total of **`r nrow(LikertData)`** responses were gathered.
+
+## Priority List
+
+@fig-lollipot displays the mean response from all respondents on each feature. 
+
+```{r}
+#| label: fig-lollipot
+#| fig-cap: "Lollipop chart"
+#| echo: false
+data1 <- data
+data1$Response <- scale[match(data1$Response, names(scale))]
+
+data1 <- data1 |>
+  group_by(Feature) |>
+  summarise(Mean = mean(Response)) |>
+  arrange(Mean)
+
+ggplot(data1, aes(x = Mean, xend = 1, y = reorder(Feature, Mean), yend = Feature)) +
+  geom_segment() +
+  geom_point(size = 8, colour = "lightblue") +
+  geom_text(aes(label = Mean)) +
+  ggtitle(label = "Virtual Population Visualisation", 
+          subtitle = "Average Response of Feature on Likert scale (1-5)") +
+  scale_x_continuous(limits = c(1, 5))+
+  xlab("Mean Response") +
+  ylab("Feature") +
+  theme_classic() 
+
+
+```
+
+
+
+## In agreement?
+
+@fig-stackedbar displayed if there's a broad agreement in the responses. 
+
+```{r}
+#| label: fig-stackedbar
+#| fig-cap: "Stacked Bar Chart"
+#| echo: false
+ggplot(data = data, aes(x = Percent, fill = Response, y = Feature)) +
+  geom_bar(stat = "identity") +
+  scale_fill_brewer(palette = "YlGn")+
+  labs(
+    title = "KerusCloud VPV",
+    subtitle = "Reponse to 'How important would you view the feature?'",
+    x = "Response (%)",
+    y = "Feature"
+  ) +
+  theme_classic() +
+  theme(legend.position = "bottom")
+```
